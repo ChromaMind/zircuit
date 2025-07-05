@@ -12,7 +12,6 @@ contract ChromaMindTest is Test {
 
     // This function runs before each test
     function setUp() public {
-        // Deploy the contract as the 'owner'
         vm.startPrank(owner);
         chromaMind = new ChromaMind(
             "ChromaMind Trips",
@@ -31,7 +30,8 @@ contract ChromaMindTest is Test {
         chromaMind.mintTrip(tripHash);
         vm.stopPrank();
 
-        assertEq(chromaMind.ownerOf(0), user1, "User1 should own the new token");
+        // FIX: The first token minted is 1, not 0.
+        assertEq(chromaMind.ownerOf(1), user1, "User1 should own the new token");
         assertEq(chromaMind.balanceOf(user1), 1, "User1 balance should be 1");
     }
 
@@ -53,9 +53,9 @@ contract ChromaMindTest is Test {
     function test_Donation() public {
         bytes32 tripHash = keccak256("donation_trip");
         
-        // User1 mints the trip
+        // User1 mints the trip (mints tokenId 1)
         vm.prank(user1);
-        chromaMind.mintTrip(tripHash); // Mints tokenId 0
+        chromaMind.mintTrip(tripHash); 
 
         uint256 creatorInitialBalance = user1.balance;
         uint256 donationAmount = 1 ether;
@@ -63,7 +63,9 @@ contract ChromaMindTest is Test {
         // User2 donates 1 ETH to the trip
         vm.deal(user2, donationAmount); // Give user2 1 ETH to donate
         vm.startPrank(user2);
-        chromaMind.donate{value: donationAmount}(0);
+        
+        // FIX: Donate to tokenId 1, which was just minted.
+        chromaMind.donate{value: donationAmount}(1); 
         vm.stopPrank();
 
         // Check if creator's balance increased
